@@ -48,30 +48,32 @@ class QuestionExtractor:
         return []
 
     def _try_ocr_patterns(self, text: str, paper_id: str) -> List[Dict]:
-        """OCR-specific extraction patterns + fallback heuristics."""
+        """More aggressive OCR question extraction."""
         patterns = [
+            # Standard numbered questions (more flexible)
             r'(?:^|\n)\s*(\d+)\s*[\.)\]]\s*(.*?)(?=\n\s*\d+\s*[\.)\]]|\Z)',
+            # Questions with "OR" alternatives
+            r'(?:^|\n)\s*(\d+)\s*[\.)\]]\s*(.*?)(?:\n\s*OR\s*|\n\s*\d+\s*[\.)\]]|\Z)',
+            # Parts like "a)", "b)", "c)" within questions
+            r'(?:^|\n)\s*([a-z])\s*\)\s*(.*?)(?=\n\s*[a-z]\s*\)|\n\s*\d+|\Z)',
+            # Roman numerals i), ii), iii)
+            r'(?:^|\n)\s*([iv]+)\s*\)\s*(.*?)(?=\n\s*[iv]+\s*\)|\n\s*\d+|\Z)',
+            # Questions starting with keywords
+            r'(?:^|\n)((?:Define|Explain|Write|Solve|Find|Calculate|Derive|Prove|Show|Compare).*?)(?=\n(?:Define|Explain|Write|Solve|Find|Calculate|Derive|Prove|Show|Compare)|\n\d+|\Z)',
+            # Mark-based with more flexibility
             r'(.*?)[\(\[](\d+)\s*[Mm]arks?[\)\]](.*?)(?=.*?[\(\[]\d+\s*[Mm]arks?|\Z)',
-            r'(?:[Qq]uestion|[Qq])\s*(\d+)(?:\s*[:\.)]|\s+)(.*?)(?=(?:[Qq]uestion|[Qq])\s*\d+|\Z)',
-            r'\n+\s*(\d+)(?:\s*[\.)]|(?=\s+[A-Z]))(.*?)(?=\n+\s*\d+|\Z)',
+            # Split by double newlines (paragraph breaks)
+            r'([^\n]*(?:\n[^\n]*)*?)(?:\n\n|\Z)',
         ]
 
+        best_result = []
         for pattern in patterns:
             matches = re.findall(pattern, text, re.DOTALL | re.MULTILINE | re.IGNORECASE)
-            questions = self._build_question_objects(matches, paper_id)
-            if len(questions) >= 2:
-                self.logger.info(f"Using OCR pattern: found {len(questions)} questions")
-                return questions
+            if len(matches) > len(best_result):
+                best_result = matches
+                self.logger.info(f"OCR pattern found {len(matches)} questions with pattern")
 
-        marks_questions = self._extract_questions_by_marks(text, paper_id)
-        if len(marks_questions) >= 2:
-            self.logger.info(f"Using marks-based fallback... found {len(marks_questions)} questions")
-            return marks_questions
-
-        indicator_questions = self._split_by_indicators(text, paper_id)
-        if indicator_questions:
-            self.logger.info(f"Using indicator-based fallback... found {len(indicator_questions)} questions")
-        return indicator_questions
+        return self._build_question_objects(best_result, paper_id)
 
     def _build_question_objects(self, matches: List, paper_id: str) -> List[Dict]:
         """Build normalized question dictionaries from regex matches."""
