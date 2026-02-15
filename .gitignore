@@ -23,4 +23,8 @@ Thumbs.db
 .vscode/
 .idea/
 
-data/processed/
+# Keep dataset folders empty in git by default
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
