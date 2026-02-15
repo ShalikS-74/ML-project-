@@ -15,6 +15,19 @@ EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 SIMILARITY_THRESHOLD = 0.80  # Will tune between 0.75-0.85
 CLUSTERING_METHOD = "agglomerative"  # Options: "agglomerative", "dbscan"
 
+# DBSCAN configuration (Option A)
+DBSCAN_EPS = 0.25
+DBSCAN_MIN_SAMPLES = 2
+
+# Trend scoring weights
+COVERAGE_WEIGHT = 0.5
+FREQUENCY_WEIGHT = 0.3
+WEIGHTED_WEIGHT = 0.2
+
+# TON priority thresholds
+HIGH_PRIORITY_THRESHOLD = 0.7
+MEDIUM_PRIORITY_THRESHOLD = 0.4
+
 # Question extraction patterns
 QUESTION_PATTERNS = [
     r'^(\d+)[\.\)]\s*(.*?)(?=^\d+[\.\)]|\Z)',

@@ -66,6 +66,13 @@ class EmbeddingEngine:
         text = re.sub(r"^\s*\d+[\.\)]\s*", "", text)
         text = re.sub(r"\[\d+\s*marks?\]", "", text, flags=re.IGNORECASE)
         text = re.sub(r"\(\d+\s*marks?\)", "", text, flags=re.IGNORECASE)
+        # Remove command verbs while preserving technical terms/content.
+        text = re.sub(
+            r"\b(define|explain|discuss|list|describe|write|solve|find|calculate)\b",
+            "",
+            text,
+            flags=re.IGNORECASE,
+        )
         text = re.sub(r"\s+", " ", text.strip())
         return text
 
